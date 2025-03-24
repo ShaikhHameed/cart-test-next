@@ -1,103 +1,116 @@
-import Image from "next/image";
+'use client';
+import { useEffect, useState } from "react";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.js
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [products,setProducts] = useState(null);
+  const [filteredProducts,setFilteredProducts] = useState(null);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  useEffect(()=>{
+    const fetchProducts = async ()=>{
+      const getProducts = await fetch('https://dummyjson.com/carts', {method:'GET'});
+      const data = await getProducts.json();
+      setProducts(data);
+      setFilteredProducts(data);
+    }
+    fetchProducts();
+  },[])
+
+  const sortProducts = (e)=>{
+    const sortCarts = filteredProducts.carts.map((cart)=>{
+      const sortProducts = [...cart.products];
+
+      switch(e){
+        case 'priceLowtoHigh': sortProducts.sort((a,b)=>a.price-b.price); break;
+        case 'priceHightoLow': sortProducts.sort((a,b)=>b.price-a.price); break;
+        case 'QuantityLowtoHigh': sortProducts.sort((a,b)=>a.quantity-b.quantity); break;
+        case 'QuantityHightoLow': sortProducts.sort((a,b)=>b.quantity-a.quantity); break;
+        default: break;
+      }
+
+      return {
+        ...cart,products:sortProducts
+      }
+
+    
+
+    })
+
+    setFilteredProducts({cart:sortCarts}) 
+  }
+
+  const searchProducts = (name)=>{
+      if(!name){
+        setFilteredProducts(products);
+        return;
+      }
+      
+      const filteredCarts = products.carts.map((cart)=>{
+        const filteredGetProducts = cart.products.filter((product)=>{return product.title.toLowerCase().includes(name.toLowerCase())});
+        return{
+          ...cart,
+          products:filteredGetProducts,
+        }
+      }).filter((a)=>a.products.length>0);
+
+      setFilteredProducts({carts:filteredCarts});
+  }
+
+  return (
+    <>
+      <div className="container mx-auto py-10">
+      <div className="grid grid-cols-5">
+        <div className="col-span-2">
+          <input type='search' className="w-full p-1 px-4 rounded-md active:outline-none focus:outline-none focus:border-gray-600 border border-gray-300 " onChange={(e)=>{searchProducts(e.target.value)}} />
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+        <div ></div>  
+        <div ></div>
+        <div>
+          <select onChange={(e)=>sortProducts(e.target.value)} className="w-full p-1 px-4 rounded-md active:outline-none focus:outline-none focus:border-gray-600 border border-gray-300 ">
+            <option value='' selected disabled>Sort By..</option> 
+            <option value='priceLowtoHigh'>Sort Price Low to High</option>
+            <option value='priceHightoLow'>Sort Price High to Low</option>
+            <option value='QuantityLowtoHigh'>Sort Quantity Low to High</option>
+            <option value='QuantityHightoLow'>Sort Quantity High to Low</option>
+          </select>
+        </div>
+      </div>
+      
+      {filteredProducts && filteredProducts.carts.map((cart,index)=>(
+        <div className="p-4 rounded-md bg-gray-100 border border-gray-300 my-4" key={index}>
+          <span className="bg-green-100 p-2 text-sm font-semibold rounded-md border border-green-200">User ID: {cart.id}</span>
+          <div className="flex flex-wrap flex-row gap-4 mt-4">
+            <span className="bg-gr  ay-300 p-2 text-sm font-semibold rounded-md border border-gray-400">Total Products: {cart.totalProducts}</span>
+            <span className="bg-gray-300 p-2 text-sm font-semibold rounded-md border border-gray-400">Total Quantity: {cart.totalQuantity}</span>
+            <span className="bg-gray-300 p-2 text-sm font-semibold rounded-md border border-gray-400">Total Discounts: {cart.discountedTotal}</span>
+            <span className="bg-gray-300 p-2 text-sm font-semibold rounded-md border border-gray-400">Total: {cart.total}</span>
+          </div>
+
+          <table className="w-full mt-4">
+            <thead>
+              <tr>
+                <td>Id</td>
+                <td>Thumbnail</td>
+                <td>Title</td>
+                <td>Price</td>
+                <td>Quantity</td>
+              </tr>
+            </thead>
+            <tbody>
+
+            {cart.products && cart.products.map((product,index)=>(
+              <tr key={index}>
+                <td>{product.id}</td>
+                <td><img height={'100px'} width={'100px'} loading="lazy" src={product.thumbnail} /></td>
+                <td>{product.title}</td>
+                <td>{product.price}</td>
+                <td>{product.quantity}</td>
+              </tr>
+            ))}
+            </tbody>
+          </table>
+        </div>
+      ))}
+      </div>
+    </>
   );
 }
